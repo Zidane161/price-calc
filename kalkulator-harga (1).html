@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#0f0f0f">
+<title>Price Calculator</title>
+<style>
+  :root{
+    --bg:#0f0f0f;--bg2:#1a1a1a;--bg3:#252525;
+    --border:rgba(255,255,255,0.07);--border2:rgba(255,255,255,0.14);
+    --text:#f0f0f0;--muted:#888;--dim:#4a4a4a;
+    --accent:#e8d5a3;--accent-bg:rgba(232,213,163,0.08);--accent-bd:rgba(232,213,163,0.25);
+    --green:#4ade80;--yellow:#fbbf24;--red:#f87171;--blue:#60a5fa;
+    --r:14px;--rs:10px;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+  html,body{min-height:100%;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;overscroll-behavior:none;}
+  body{display:flex;flex-direction:column;}
+
+  /* HEADER */
+  .hdr{background:var(--bg2);border-bottom:1px solid var(--border);padding-top:env(safe-area-inset-top,0);position:sticky;top:0;z-index:100;}
+  .hdr-row{display:flex;align-items:center;justify-content:space-between;padding:13px 18px;}
+  .logo{font-size:15px;font-weight:600;color:var(--accent);letter-spacing:.02em;}
+  .logo em{color:var(--muted);font-style:normal;font-weight:400;}
+
+  /* KURS BAR */
+  .kurs-bar{padding:8px 18px 10px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:8px;}
+  .kurs-chips{display:flex;gap:7px;flex-wrap:wrap;}
+  .chip{font-size:12px;padding:5px 11px;border-radius:20px;background:var(--bg3);border:1px solid var(--border2);color:var(--muted);display:flex;align-items:center;gap:5px;line-height:1;}
+  .chip b{color:var(--text);font-weight:600;}
+  .dot{width:6px;height:6px;border-radius:50%;background:var(--dim);flex-shrink:0;}
+  .chip.live .dot{background:var(--green);}
+  .chip.loading .dot{background:var(--yellow);animation:blink 1s infinite;}
+  .chip.err .dot{background:var(--red);}
+  .chip.manual .dot{background:var(--blue);}
+  @keyframes blink{0%,100%{opacity:1}50%{opacity:.25}}
+  .kurs-right{display:flex;align-items:center;gap:5px;flex-shrink:0;}
+  .ts{font-size:10px;color:var(--dim);white-space:nowrap;}
+  .rbtn{background:none;border:none;font-size:16px;color:var(--muted);cursor:pointer;padding:3px 5px;line-height:1;}
+  .rbtn.spin{animation:spin .7s linear infinite;}
+  @keyframes spin{to{transform:rotate(360deg)}}
+
+  /* KURS EDIT PANEL */
+  .kurs-edit{display:none;padding:12px 18px 14px;border-bottom:1px solid var(--border);background:var(--bg2);}
+  .kurs-edit.on{display:block;}
+  .ke-note{font-size:11px;color:var(--dim);margin-bottom:10px;line-height:1.5;}
+  .ke-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+  .ke-field label{font-size:11px;color:var(--dim);display:block;margin-bottom:5px;}
+  .ke-reset{font-size:12px;color:var(--accent);background:none;border:none;cursor:pointer;padding:0;margin-top:10px;}
+
+  /* TOAST */
+  .toast{position:fixed;top:calc(env(safe-area-inset-top,0) + 70px);left:50%;transform:translateX(-50%);background:#1e1e1e;border:1px solid var(--border2);color:var(--muted);font-size:12px;padding:8px 16px;border-radius:20px;z-index:999;white-space:nowrap;opacity:0;transition:opacity .3s;pointer-events:none;}
+  .toast.show{opacity:1;}
+
+  /* MAIN */
+  .main{flex:1;overflow-y:auto;padding:0 16px 150px;}
+
+  /* CATEGORY */
+  .sec-label{font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--dim);margin-bottom:9px;}
+  .cat-sec{padding:16px 0 12px;}
+  .cat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:7px;}
+  .cat-btn{background:var(--bg3);border:1px solid var(--border);border-radius:var(--rs);padding:11px 4px;text-align:center;cursor:pointer;transition:border-color .15s,background .15s;}
+  .cat-btn.on{background:var(--accent-bg);border-color:var(--accent-bd);}
+  .cat-btn .ic{font-size:21px;display:block;margin-bottom:3px;}
+  .cat-btn .nm{font-size:11px;color:var(--muted);font-weight:500;}
+  .cat-btn.on .nm{color:var(--accent);}
+
+  /* PRICE INPUT */
+  .price-sec{margin-bottom:4px;}
+  .p-label{font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--dim);margin-bottom:7px;}
+  .p-wrap{background:var(--bg2);border:1px solid var(--border2);border-radius:var(--r);padding:13px 16px;display:flex;align-items:center;gap:10px;}
+  .p-cur{font-size:21px;font-weight:600;color:var(--dim);}
+  .p-inp{flex:1;background:none;border:none;outline:none;font-size:28px;font-weight:600;color:var(--text);caret-color:var(--accent);width:100%;}
+  .p-inp::placeholder{color:var(--dim);}
+
+  /* INPUTS */
+  .inp-sec{margin-top:11px;}
+  .field{margin-bottom:11px;}
+  .field label{font-size:13px;color:var(--muted);display:block;margin-bottom:6px;}
+  input[type=number],select{width:100%;background:var(--bg2);border:1px solid var(--border2);color:var(--text);font-size:16px;padding:12px 14px;border-radius:var(--rs);outline:none;-webkit-appearance:none;appearance:none;}
+  input[type=number]:focus,select:focus{border-color:var(--accent);}
+  select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='11' height='7'%3E%3Cpath d='M1 1l4.5 4.5L10 1' stroke='%23666' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 13px center;padding-right:34px;}
+  .row2{display:grid;grid-template-columns:1fr 85px;gap:8px;}
+
+  .chk-group{display:flex;flex-direction:column;gap:7px;margin-bottom:11px;}
+  .chk{display:flex;align-items:center;gap:12px;background:var(--bg2);border:1px solid var(--border);border-radius:var(--rs);padding:11px 13px;cursor:pointer;}
+  .chk.on{border-color:var(--accent-bd);background:var(--accent-bg);}
+  .chk-box{width:20px;height:20px;border-radius:6px;border:1.5px solid var(--border2);display:flex;align-items:center;justify-content:center;flex-shrink:0;background:var(--bg3);}
+  .chk.on .chk-box{background:var(--accent);border-color:var(--accent);}
+  .chk-tick{font-size:11px;color:#000;font-weight:700;display:none;}
+  .chk.on .chk-tick{display:block;}
+  .chk-txt{font-size:14px;color:var(--muted);flex:1;}
+  .chk.on .chk-txt{color:var(--accent);}
+  .chk-sub{font-size:11px;color:var(--dim);display:block;margin-top:1px;}
+  .sz-badge{display:none;font-size:11px;font-weight:600;padding:2px 9px;border-radius:20px;background:var(--accent-bg);color:var(--accent);border:1px solid var(--accent-bd);margin-left:7px;}
+  .hint{font-size:13px;color:var(--dim);padding:4px 0 6px;line-height:1.5;}
+
+  /* RESULT BAR */
+  .res-bar{position:fixed;bottom:0;left:0;right:0;padding:0 16px env(safe-area-inset-bottom,14px);background:var(--bg2);border-top:1px solid var(--border2);z-index:200;}
+  .res-inner{padding:11px 0 2px;}
+  .res-empty{text-align:center;padding:14px 0;color:var(--dim);font-size:14px;}
+  .res-row{display:flex;align-items:center;justify-content:space-between;gap:10px;}
+  .res-sgd{font-size:34px;font-weight:700;letter-spacing:-.02em;color:var(--green);line-height:1;}
+  .res-idr{font-size:13px;color:var(--muted);margin-top:2px;}
+  .bd-btn{background:var(--bg3);border:1px solid var(--border2);color:var(--muted);font-size:12px;padding:8px 13px;border-radius:20px;cursor:pointer;white-space:nowrap;flex-shrink:0;}
+
+  /* SHEET */
+  .overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:300;align-items:flex-end;}
+  .overlay.on{display:flex;}
+  .sheet{background:var(--bg2);border-radius:20px 20px 0 0;width:100%;padding:0 18px env(safe-area-inset-bottom,18px);border-top:1px solid var(--border2);animation:up .22s ease;}
+  @keyframes up{from{transform:translateY(100%)}to{transform:translateY(0)}}
+  .sh-handle{width:34px;height:4px;background:var(--border2);border-radius:2px;margin:11px auto 15px;}
+  .sh-title{font-size:12px;font-weight:600;color:var(--muted);letter-spacing:.07em;text-transform:uppercase;margin-bottom:13px;}
+  .bd-row{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--border);}
+  .bd-row:last-of-type{border:none;}
+  .bd-l{font-size:14px;color:var(--muted);}
+  .bd-v{font-size:14px;font-weight:500;color:var(--text);}
+  .bd-total{background:var(--bg3);margin:4px -5px 0;padding:12px 5px;border-radius:var(--rs);display:flex;justify-content:space-between;align-items:center;}
+  .bd-total .bd-l{color:var(--text);font-weight:600;font-size:15px;}
+  .bd-total .bd-v{color:var(--green);font-size:16px;}
+  .sh-close{width:100%;margin-top:13px;padding:13px;background:var(--bg3);border:1px solid var(--border2);border-radius:var(--rs);color:var(--text);font-size:15px;font-weight:500;cursor:pointer;}
+</style>
+</head>
+<body>
+
+<div class="hdr">
+  <div class="hdr-row">
+    <div class="logo">Price Calc <em>/ China</em></div>
+    <button class="rbtn" id="editBtn" onclick="toggleEdit()">✎ Kurs</button>
+  </div>
+
+  <div class="kurs-bar">
+    <div class="kurs-chips">
+      <div class="chip loading" id="chipA">
+        <div class="dot"></div><span>CNY→SGD: <b id="vA">–</b></span>
+      </div>
+      <div class="chip loading" id="chipB">
+        <div class="dot"></div><span>SGD→IDR: <b id="vB">–</b></span>
+      </div>
+    </div>
+    <div class="kurs-right">
+      <span class="ts" id="tsLabel">Memuat...</span>
+      <button class="rbtn" id="rfBtn" onclick="fetchRates()">↻</button>
+    </div>
+  </div>
+
+  <div class="kurs-edit" id="kursEdit">
+    <p class="ke-note">Isi manual jika kurs otomatis tidak tersedia. Kosongkan untuk pakai kurs live.</p>
+    <div class="ke-grid">
+      <div class="ke-field"><label>CNY → SGD</label><input type="number" id="mA" placeholder="contoh: 0.183" step="0.001" inputmode="decimal" oninput="onManual()"></div>
+      <div class="ke-field"><label>SGD → IDR</label><input type="number" id="mB" placeholder="contoh: 13600" step="100" inputmode="decimal" oninput="onManual()"></div>
+    </div>
+    <button class="ke-reset" onclick="resetManual()">↺ Pakai kurs live lagi</button>
+  </div>
+</div>
+
+<div id="toast" class="toast"></div>
+
+<div class="main">
+  <div class="cat-sec">
+    <div class="sec-label">Kategori</div>
+    <div class="cat-grid">
+      <div class="cat-btn on" data-c="clothes" onclick="setCat('clothes')"><span class="ic">👕</span><span class="nm">Clothes</span></div>
+      <div class="cat-btn" data-c="bag" onclick="setCat('bag')"><span class="ic">👜</span><span class="nm">Bag</span></div>
+      <div class="cat-btn" data-c="shoes" onclick="setCat('shoes')"><span class="ic">👟</span><span class="nm">Shoes</span></div>
+      <div class="cat-btn" data-c="accessories" onclick="setCat('accessories')"><span class="ic">💍</span><span class="nm">Accs</span></div>
+    </div>
+  </div>
+
+  <div class="price-sec">
+    <div class="p-label">Harga Produk</div>
+    <div class="p-wrap">
+      <span class="p-cur">¥</span>
+      <input class="p-inp" type="number" id="cny" placeholder="0" inputmode="decimal" min="0" step="1" oninput="calc()">
+    </div>
+  </div>
+
+  <div class="inp-sec" id="catInp"></div>
+</div>
+
+<div class="res-bar">
+  <div class="res-inner" id="resBar">
+    <div class="res-empty">Masukkan harga untuk melihat hasil</div>
+  </div>
+</div>
+
+<div class="overlay" id="overlay" onclick="closeSheet(event)">
+  <div class="sheet">
+    <div class="sh-handle"></div>
+    <div class="sh-title">Rincian Biaya</div>
+    <div id="shBody"></div>
+    <button class="sh-close" onclick="closeSheet()">Tutup</button>
+  </div>
+</div>
+
+<script>
+/* ── Config ── */
+const GST={clothes:0.76,bag:1.15,shoes:1.35,accessories:1.15};
+const DAILY=5.65,PROFIT=10;
+// Fallback rates (used if all APIs fail and no cache/manual)
+const FB_CNY=0.183, FB_IDR=13600;
+
+/* ── State ── */
+let cat='clothes', lastRes=null;
+let liveCNY=null, liveIDR=null;
+let manCNY=null, manIDR=null;
+const chk={bulky:false,foldable:false,withbox:false};
+
+/* ── Rates ── */
+function getRate(){
+  const c=manCNY||liveCNY||FB_CNY;
+  const i=manIDR||liveIDR||FB_IDR;
+  const isManual=!!(manCNY||manIDR);
+  const isLive=!!(liveCNY&&liveIDR)&&!isManual;
+  return{c,i,isManual,isLive};
+}
+
+// Three different API sources tried in order
+const APIS=[
+  // 1. Frankfurter (EU ECB data, good CORS)
+  async()=>{
+    const r=await fetch('https://api.frankfurter.app/latest?from=CNY&to=SGD,IDR',{signal:AbortSignal.timeout(6000)});
+    const d=await r.json();
+    return{cny:d.rates.SGD, idr:d.rates.IDR/d.rates.SGD};
+  },
+  // 2. ExchangeRate-API free tier
+  async()=>{
+    const r=await fetch('https://open.er-api.com/v6/latest/CNY',{signal:AbortSignal.timeout(6000)});
+    const d=await r.json();
+    if(d.result!=='success')throw new Error('bad');
+    return{cny:d.rates.SGD, idr:d.rates.IDR/d.rates.SGD};
+  },
+  // 3. fawazahmed0 via jsDelivr CDN (most reliable for file:// origins)
+  async()=>{
+    const r=await fetch('https://cdn.jsdelivr.net/npm/@fawazahmed0/currency-api@latest/v1/currencies/cny.min.json',{signal:AbortSignal.timeout(8000)});
+    const d=await r.json();
+    return{cny:d.cny.sgd, idr:d.cny.idr/d.cny.sgd};
+  }
+];
+
+async function fetchRates(){
+  const rb=document.getElementById('rfBtn');
+  rb.classList.add('spin');
+  setChip('loading','loading');
+  setTs('Memuat...');
+
+  let success=false;
+  for(let i=0;i<APIS.length;i++){
+    try{
+      const d=await APIS[i]();
+      liveCNY=parseFloat(d.cny.toFixed(5));
+      liveIDR=Math.round(d.idr);
+      updateChipValues();
+      setChip('live','live');
+      const now=new Date();
+      const t=pad(now.getHours())+':'+pad(now.getMinutes());
+      setTs('Live '+t);
+      // Cache
+      try{localStorage.setItem('kc',liveCNY);localStorage.setItem('ki',liveIDR);localStorage.setItem('kt',now.toISOString());}catch(e){}
+      success=true;
+      break;
+    }catch(e){ /* try next */ }
+  }
+
+  if(!success){
+    // Try cache
+    try{
+      const c=localStorage.getItem('kc'),i=localStorage.getItem('ki'),t=localStorage.getItem('kt');
+      if(c&&i){
+        liveCNY=parseFloat(c); liveIDR=parseInt(i);
+        updateChipValues();
+        setChip('live','live');
+        if(t){const d=new Date(t);setTs('Cache '+pad(d.getHours())+':'+pad(d.getMinutes()));}
+        success=true;
+        toast('Pakai kurs cache tersimpan');
+      }
+    }catch(e){}
+
+    if(!success){
+      setChip('err','err');
+      setTs('Gagal');
+      // Use fallback defaults so app still works
+      liveCNY=FB_CNY; liveIDR=FB_IDR;
+      updateChipValues();
+      toast('Kurs tidak bisa diambil — pakai kurs default. Isi manual jika perlu.');
+    }
+  }
+
+  rb.classList.remove('spin');
+  calc();
+}
+
+function updateChipValues(){
+  const r=getRate();
+  document.getElementById('vA').textContent=r.c.toFixed(4);
+  document.getElementById('vB').textContent=r.i.toLocaleString('id-ID');
+}
+
+function setChip(a,b){
+  document.getElementById('chipA').className='chip '+a;
+  document.getElementById('chipB').className='chip '+b;
+}
+function setTs(s){document.getElementById('tsLabel').textContent=s;}
+function pad(n){return n.toString().padStart(2,'0');}
+
+function onManual(){
+  manCNY=parseFloat(document.getElementById('mA').value)||null;
+  manIDR=parseFloat(document.getElementById('mB').value)||null;
+  if(manCNY||manIDR){setChip('manual','manual');setTs('Manual');}
+  else{if(liveCNY)setChip('live','live');else setChip('err','err');}
+  updateChipValues();
+  calc();
+}
+
+function resetManual(){
+  manCNY=null;manIDR=null;
+  document.getElementById('mA').value='';
+  document.getElementById('mB').value='';
+  if(liveCNY){setChip('live','live');setTs('Live');}
+  updateChipValues();
+  calc();
+}
+
+function toggleEdit(){
+  const p=document.getElementById('kursEdit');
+  p.classList.toggle('on');
+}
+
+/* ── Toast ── */
+let toastTmr;
+function toast(msg){
+  const el=document.getElementById('toast');
+  el.textContent=msg; el.classList.add('show');
+  clearTimeout(toastTmr);
+  toastTmr=setTimeout(()=>el.classList.remove('show'),3500);
+}
+
+/* ── Category HTML ── */
+const CAT={
+  clothes:`<div class="field"><label>Berat produk</label><div class="row2"><input type="number" id="wt" placeholder="Contoh: 350" inputmode="decimal" min="0" step="1" oninput="calc()"><select id="wu" onchange="calc()"><option value="g">gram</option><option value="kg">kg</option></select></div></div>`,
+  bag:`<div class="field"><label>Panjang tas (cm) <span class="sz-badge" id="szB"></span></label><input type="number" id="bl" placeholder="Contoh: 30" inputmode="decimal" min="0" step="0.5" oninput="calc()"></div><div class="chk-group"><div class="chk" id="ck-bulky" onclick="tChk('bulky')"><div class="chk-box"><span class="chk-tick">✓</span></div><div class="chk-txt">Bulky / tebal<span class="chk-sub">Naik 1 ukuran atau +$1.50</span></div></div><div class="chk" id="ck-foldable" onclick="tChk('foldable')"><div class="chk-box"><span class="chk-tick">✓</span></div><div class="chk-txt">Foldable / tipis<span class="chk-sub">Turun 1 ukuran (contoh: Longchamp)</span></div></div><div class="chk" id="ck-withbox" onclick="tChk('withbox')"><div class="chk-box"><span class="chk-tick">✓</span></div><div class="chk-txt">Dengan box<span class="chk-sub">Naik 1 ukuran atau +$1.50</span></div></div></div>`,
+  shoes:`<p class="hint">Sepatu tarif tetap: <strong>$3.80 SGD</strong> — tidak perlu input tambahan.</p>`,
+  accessories:`<div class="field"><label>Tipe box</label><select id="ab" onchange="calc()"><option value="small">📦 Small / medium box — $1.15</option><option value="big">📦 Big box — $2.00</option><option value="fullset">🎁 Full set (box+buku+sertifikat+paperbag) — $2.65</option></select></div>`
+};
+
+function tChk(k){chk[k]=!chk[k];document.getElementById('ck-'+k)?.classList.toggle('on',chk[k]);calc();}
+function resetChk(){Object.keys(chk).forEach(k=>chk[k]=false);}
+
+function setCat(c){
+  cat=c;resetChk();
+  document.querySelectorAll('.cat-btn').forEach(b=>b.classList.toggle('on',b.dataset.c===c));
+  document.getElementById('catInp').innerHTML=CAT[c]||'';
+  calc();
+}
+
+/* ── Shipping ── */
+function ship(){
+  if(cat==='clothes'){
+    const w=parseFloat(document.getElementById('wt')?.value)||0;
+    const u=document.getElementById('wu')?.value||'g';
+    const g=u==='kg'?w*1000:w;
+    if(!g)return null;
+    if(g<=500)return{cost:1.15,lb:'100–500g'};
+    if(g<=1000)return{cost:2.30,lb:'500g–1kg'};
+    if(g<=1900)return{cost:3.50,lb:'1kg–1.9kg'};
+    return{cost:4.50,lb:'2kg–2.5kg'};
+  }
+  if(cat==='bag'){
+    const len=parseFloat(document.getElementById('bl')?.value)||0;
+    if(!len)return null;
+    const P=[1.50,3.05,4.55],N=['Small','Medium','Large'];
+    let si=len<=25?0:len<=38?1:2,ex=0;
+    if(chk.foldable)si=Math.max(0,si-1);
+    if(chk.bulky){si<2?si++:ex+=1.50;}
+    if(chk.withbox){si<2?si++:ex+=1.50;}
+    si=Math.min(2,si);
+    const b=document.getElementById('szB');
+    if(b){b.textContent=N[si];b.style.display='inline-block';}
+    return{cost:P[si]+ex,lb:N[si]+(ex?'+ex':'')};
+  }
+  if(cat==='shoes')return{cost:3.80,lb:'Fixed'};
+  if(cat==='accessories'){
+    const v=document.getElementById('ab')?.value||'small';
+    return{small:{cost:1.15,lb:'Small/Med'},big:{cost:2.00,lb:'Big box'},fullset:{cost:2.65,lb:'Full set'}}[v];
+  }
+  return null;
+}
+
+/* ── Calc ── */
+function f(n){return n.toFixed(2);}
+function idrF(n){return'Rp '+(Math.round(n/500)*500).toLocaleString('id-ID');}
+
+function calc(){
+  const cnyVal=parseFloat(document.getElementById('cny')?.value)||0;
+  const {c:rSGD,i:rIDR,isManual}=getRate();
+  const bar=document.getElementById('resBar');
+  if(!cnyVal){lastRes=null;bar.innerHTML='<div class="res-empty">Masukkan harga untuk melihat hasil</div>';return;}
+  const s=ship();
+  if(!s){lastRes=null;bar.innerHTML='<div class="res-empty">Lengkapi data berat / ukuran</div>';return;}
+  const prod=cnyVal*rSGD,bank=prod*0.03,gst=GST[cat];
+  const total=prod+bank+DAILY+s.cost+gst+PROFIT;
+  const rounded=Math.round(total),totalIDR=rounded*rIDR;
+  lastRes={cnyVal,prod,bank,s,gst,total,rounded,totalIDR,rIDR,rSGD,isManual};
+  bar.innerHTML=`<div class="res-row"><div><div class="res-sgd">SGD ${rounded}</div><div class="res-idr">${idrF(totalIDR)}</div></div><button class="bd-btn" onclick="showSheet()">Rincian ▾</button></div>`;
+}
+
+/* ── Sheet ── */
+function showSheet(){
+  if(!lastRes)return;
+  const r=lastRes;
+  const kLabel=r.isManual?'(manual)':'(live)';
+  document.getElementById('shBody').innerHTML=`
+    <div class="bd-row"><span class="bd-l">Kurs CNY→SGD</span><span class="bd-v">${r.rSGD.toFixed(4)} ${kLabel}</span></div>
+    <div class="bd-row"><span class="bd-l">Harga produk (¥${r.cnyVal})</span><span class="bd-v">$${f(r.prod)}</span></div>
+    <div class="bd-row"><span class="bd-l">Bank fee 3%</span><span class="bd-v">$${f(r.bank)}</span></div>
+    <div class="bd-row"><span class="bd-l">Daily expenses</span><span class="bd-v">$${f(DAILY)}</span></div>
+    <div class="bd-row"><span class="bd-l">Shipping (${r.s.lb})</span><span class="bd-v">$${f(r.s.cost)}</span></div>
+    <div class="bd-row"><span class="bd-l">GST</span><span class="bd-v">$${f(r.gst)}</span></div>
+    <div class="bd-row"><span class="bd-l">Nett profit</span><span class="bd-v">$${f(PROFIT)}</span></div>
+    <div class="bd-total"><span class="bd-l">Total Jual</span><span class="bd-v">SGD ${r.rounded} · ${idrF(r.totalIDR)}</span></div>`;
+  document.getElementById('overlay').classList.add('on');
+}
+
+function closeSheet(e){
+  if(!e||e.target===document.getElementById('overlay')||!e)
+    document.getElementById('overlay').classList.remove('on');
+}
+
+/* ── Init ── */
+setCat('clothes');
+fetchRates();
+</script>
+</body>
+</html>
