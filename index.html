@@ -375,7 +375,7 @@ function ship(){
     let si=len<=25?0:len<=38?1:2,ex=0;
     if(chk.foldable)si=Math.max(0,si-1);
     if(chk.bulky){si<2?si++:ex+=1.50;}
-    if(chk.withbox){si<2?si++:ex+=1.50;}
+    if(chk.withbox){si<2?si++:ex+=2.00;}
     si=Math.min(2,si);
     const b=document.getElementById('szB');
     if(b){b.textContent=N[si];b.style.display='inline-block';}
