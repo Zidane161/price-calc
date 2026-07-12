@@ -5,431 +5,491 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="theme-color" content="#0f0f0f">
-<title>Price Calculator</title>
+<meta name="theme-color" content="#111111">
+<title>Price Calc</title>
 <style>
-  :root{
-    --bg:#0f0f0f;--bg2:#1a1a1a;--bg3:#252525;
-    --border:rgba(255,255,255,0.07);--border2:rgba(255,255,255,0.14);
-    --text:#f0f0f0;--muted:#888;--dim:#4a4a4a;
-    --accent:#e8d5a3;--accent-bg:rgba(232,213,163,0.08);--accent-bd:rgba(232,213,163,0.25);
-    --green:#4ade80;--yellow:#fbbf24;--red:#f87171;--blue:#60a5fa;
-    --r:14px;--rs:10px;
-  }
-  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
-  html,body{min-height:100%;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;overscroll-behavior:none;}
-  body{display:flex;flex-direction:column;}
+:root{
+  --bg:#111;--bg2:#1c1c1e;--bg3:#2c2c2e;--bg4:#3a3a3c;
+  --text:#f5f5f7;--muted:#8e8e93;--dim:#48484a;
+  --accent:#f5c842;--acc2:rgba(245,200,66,.12);--acc3:rgba(245,200,66,.28);
+  --green:#30d158;--red:#ff453a;--blue:#0a84ff;--yellow:#ffd60a;
+  --vvip:#bf5af2;--vvip2:rgba(191,90,242,.12);--vvip3:rgba(191,90,242,.3);
+  --r:14px;--rs:11px;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+html{height:100%;background:var(--bg);}
+body{min-height:100%;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,sans-serif;overscroll-behavior:none;display:flex;flex-direction:column;}
 
-  /* HEADER */
-  .hdr{background:var(--bg2);border-bottom:1px solid var(--border);padding-top:env(safe-area-inset-top,0);position:sticky;top:0;z-index:100;}
-  .hdr-row{display:flex;align-items:center;justify-content:space-between;padding:13px 18px;}
-  .logo{font-size:15px;font-weight:600;color:var(--accent);letter-spacing:.02em;}
-  .logo em{color:var(--muted);font-style:normal;font-weight:400;}
+.hdr{background:var(--bg2);border-bottom:1px solid rgba(255,255,255,.08);position:sticky;top:0;z-index:50;padding-top:env(safe-area-inset-top,0);}
+.hdr-top{display:flex;align-items:center;justify-content:space-between;padding:13px 18px;}
+.logo{font-size:17px;font-weight:700;color:var(--accent);letter-spacing:-.01em;}
+.logo span{color:var(--muted);font-weight:400;font-size:13px;margin-left:5px;}
+.refresh-wrap{display:flex;align-items:center;gap:8px;}
+.ts{font-size:11px;color:var(--dim);}
+.rbtn{background:none;border:none;font-size:18px;color:var(--muted);cursor:pointer;padding:4px;line-height:1;}
+.rbtn.spin{animation:spin .7s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg)}}
 
-  /* KURS BAR */
-  .kurs-bar{padding:8px 18px 10px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:8px;}
-  .kurs-chips{display:flex;gap:7px;flex-wrap:wrap;}
-  .chip{font-size:12px;padding:5px 11px;border-radius:20px;background:var(--bg3);border:1px solid var(--border2);color:var(--muted);display:flex;align-items:center;gap:5px;line-height:1;}
-  .chip b{color:var(--text);font-weight:600;}
-  .dot{width:6px;height:6px;border-radius:50%;background:var(--dim);flex-shrink:0;}
-  .chip.live .dot{background:var(--green);}
-  .chip.loading .dot{background:var(--yellow);animation:blink 1s infinite;}
-  .chip.err .dot{background:var(--red);}
-  .chip.manual .dot{background:var(--blue);}
-  @keyframes blink{0%,100%{opacity:1}50%{opacity:.25}}
-  .kurs-right{display:flex;align-items:center;gap:5px;flex-shrink:0;}
-  .ts{font-size:10px;color:var(--dim);white-space:nowrap;}
-  .rbtn{background:none;border:none;font-size:16px;color:var(--muted);cursor:pointer;padding:3px 5px;line-height:1;}
-  .rbtn.spin{animation:spin .7s linear infinite;}
-  @keyframes spin{to{transform:rotate(360deg)}}
+.kurs-bar{display:flex;align-items:center;gap:8px;padding:0 18px 12px;flex-wrap:wrap;}
+.chip{display:flex;align-items:center;gap:6px;background:var(--bg3);border-radius:20px;padding:6px 12px;border:1px solid rgba(255,255,255,.08);font-size:12px;color:var(--muted);}
+.chip b{color:var(--text);font-weight:600;}
+.dot{width:7px;height:7px;border-radius:50%;background:var(--dim);flex-shrink:0;}
+.chip.live .dot{background:var(--green);}
+.chip.loading .dot{background:var(--yellow);animation:blink 1s infinite;}
+.chip.err .dot{background:var(--red);}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.2}}
 
-  /* KURS EDIT PANEL */
-  .kurs-edit{display:none;padding:12px 18px 14px;border-bottom:1px solid var(--border);background:var(--bg2);}
-  .kurs-edit.on{display:block;}
-  .ke-note{font-size:11px;color:var(--dim);margin-bottom:10px;line-height:1.5;}
-  .ke-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
-  .ke-field label{font-size:11px;color:var(--dim);display:block;margin-bottom:5px;}
-  .ke-reset{font-size:12px;color:var(--accent);background:none;border:none;cursor:pointer;padding:0;margin-top:10px;}
+.ovr-bar{padding:0 18px 10px;}
+.ovr-toggle{background:none;border:none;font-size:11px;color:var(--dim);cursor:pointer;padding:0;text-decoration:underline;text-underline-offset:2px;}
+.ovr-panel{display:none;margin-top:8px;background:var(--bg3);border-radius:var(--rs);padding:12px 14px;border:1px solid rgba(255,255,255,.06);}
+.ovr-panel.on{display:block;}
+.ovr-note{font-size:11px;color:var(--dim);margin-bottom:10px;line-height:1.5;}
+.ovr-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+.ovr-field label{font-size:11px;color:var(--dim);display:block;margin-bottom:5px;}
+.ovr-field input{width:100%;background:var(--bg2);border:1px solid rgba(255,255,255,.1);color:var(--text);font-size:15px;padding:10px 12px;border-radius:8px;outline:none;-webkit-appearance:none;}
+.ovr-field input:focus{border-color:var(--accent);}
+.ovr-reset{font-size:12px;color:var(--accent);background:none;border:none;cursor:pointer;padding:0;margin-top:10px;}
 
-  /* TOAST */
-  .toast{position:fixed;top:calc(env(safe-area-inset-top,0) + 70px);left:50%;transform:translateX(-50%);background:#1e1e1e;border:1px solid var(--border2);color:var(--muted);font-size:12px;padding:8px 16px;border-radius:20px;z-index:999;white-space:nowrap;opacity:0;transition:opacity .3s;pointer-events:none;}
-  .toast.show{opacity:1;}
+.main{flex:1;padding:0 16px 170px;}
+.sec{padding:16px 0 10px;}
+.sec-lbl{font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--dim);margin-bottom:10px;}
 
-  /* MAIN */
-  .main{flex:1;overflow-y:auto;padding:0 16px 150px;}
+/* Category grid — 3 columns for 6 items */
+.cat-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;}
+.cat-btn{background:var(--bg2);border:1.5px solid var(--bg3);border-radius:var(--rs);padding:11px 4px 9px;text-align:center;cursor:pointer;transition:all .15s;}
+.cat-btn.on{background:var(--acc2);border-color:var(--acc3);}
+.cat-btn .ic{font-size:20px;display:block;margin-bottom:3px;}
+.cat-btn .nm{font-size:11px;color:var(--muted);font-weight:500;}
+.cat-btn.on .nm{color:var(--accent);}
 
-  /* CATEGORY */
-  .sec-label{font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--dim);margin-bottom:9px;}
-  .cat-sec{padding:16px 0 12px;}
-  .cat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:7px;}
-  .cat-btn{background:var(--bg3);border:1px solid var(--border);border-radius:var(--rs);padding:11px 4px;text-align:center;cursor:pointer;transition:border-color .15s,background .15s;}
-  .cat-btn.on{background:var(--accent-bg);border-color:var(--accent-bd);}
-  .cat-btn .ic{font-size:21px;display:block;margin-bottom:3px;}
-  .cat-btn .nm{font-size:11px;color:var(--muted);font-weight:500;}
-  .cat-btn.on .nm{color:var(--accent);}
+/* VVIP toggle */
+.vvip-row{display:flex;align-items:center;justify-content:space-between;background:var(--bg2);border:1.5px solid var(--bg3);border-radius:var(--rs);padding:13px 16px;margin-top:10px;cursor:pointer;transition:border-color .15s,background .15s;}
+.vvip-row.on{background:var(--vvip2);border-color:var(--vvip3);}
+.vvip-left{display:flex;align-items:center;gap:10px;}
+.vvip-icon{font-size:18px;}
+.vvip-label{font-size:14px;font-weight:500;color:var(--muted);}
+.vvip-row.on .vvip-label{color:var(--vvip);}
+.vvip-sub{font-size:11px;color:var(--dim);display:block;margin-top:1px;}
+.vvip-row.on .vvip-sub{color:var(--vvip);opacity:.7;}
+.toggle-wrap{position:relative;width:44px;height:26px;flex-shrink:0;}
+.toggle-inp{position:absolute;opacity:0;width:100%;height:100%;cursor:pointer;margin:0;z-index:1;}
+.toggle-track{width:44px;height:26px;background:var(--bg4);border-radius:13px;transition:background .2s;position:relative;}
+.toggle-inp:checked ~ .toggle-track{background:var(--vvip);}
+.toggle-knob{position:absolute;top:3px;left:3px;width:20px;height:20px;background:#fff;border-radius:50%;transition:transform .2s;pointer-events:none;}
+.toggle-inp:checked ~ .toggle-track .toggle-knob{transform:translateX(18px);}
 
-  /* PRICE INPUT */
-  .price-sec{margin-bottom:4px;}
-  .p-label{font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--dim);margin-bottom:7px;}
-  .p-wrap{background:var(--bg2);border:1px solid var(--border2);border-radius:var(--r);padding:13px 16px;display:flex;align-items:center;gap:10px;}
-  .p-cur{font-size:21px;font-weight:600;color:var(--dim);}
-  .p-inp{flex:1;background:none;border:none;outline:none;font-size:28px;font-weight:600;color:var(--text);caret-color:var(--accent);width:100%;}
-  .p-inp::placeholder{color:var(--dim);}
+.p-lbl{font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--dim);margin-bottom:8px;}
+.p-box{background:var(--bg2);border:1.5px solid var(--bg3);border-radius:var(--r);padding:14px 16px;display:flex;align-items:center;gap:10px;}
+.p-cur{font-size:24px;font-weight:700;color:var(--dim);}
+.p-inp{flex:1;background:none;border:none;outline:none;font-size:30px;font-weight:700;color:var(--text);caret-color:var(--accent);min-width:0;}
+.p-inp::placeholder{color:var(--dim);}
+.p-preview{font-size:12px;color:var(--muted);margin-top:6px;padding-left:2px;min-height:18px;}
 
-  /* INPUTS */
-  .inp-sec{margin-top:11px;}
-  .field{margin-bottom:11px;}
-  .field label{font-size:13px;color:var(--muted);display:block;margin-bottom:6px;}
-  input[type=number],select{width:100%;background:var(--bg2);border:1px solid var(--border2);color:var(--text);font-size:16px;padding:12px 14px;border-radius:var(--rs);outline:none;-webkit-appearance:none;appearance:none;}
-  input[type=number]:focus,select:focus{border-color:var(--accent);}
-  select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='11' height='7'%3E%3Cpath d='M1 1l4.5 4.5L10 1' stroke='%23666' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 13px center;padding-right:34px;}
-  .row2{display:grid;grid-template-columns:1fr 85px;gap:8px;}
+.inp-area{margin-top:12px;}
+.field{margin-bottom:10px;}
+.field label{font-size:13px;color:var(--muted);display:block;margin-bottom:7px;}
+input[type=number],select{width:100%;background:var(--bg2);border:1.5px solid var(--bg3);color:var(--text);font-size:16px;padding:13px 14px;border-radius:var(--rs);outline:none;-webkit-appearance:none;}
+input[type=number]:focus,select:focus{border-color:var(--accent);}
+select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='11' height='7'%3E%3Cpath d='M1 1l4.5 4.5L10 1' stroke='%23666' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 14px center;padding-right:36px;}
+.row2{display:grid;grid-template-columns:1fr 88px;gap:8px;}
+.chk-group{display:flex;flex-direction:column;gap:8px;margin-bottom:10px;}
+.chk{display:flex;align-items:center;gap:13px;background:var(--bg2);border:1.5px solid var(--bg3);border-radius:var(--rs);padding:12px 14px;cursor:pointer;transition:border-color .15s,background .15s;}
+.chk.on{border-color:var(--acc3);background:var(--acc2);}
+.chk-box{width:22px;height:22px;border-radius:7px;border:2px solid var(--dim);display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .15s;}
+.chk.on .chk-box{background:var(--accent);border-color:var(--accent);}
+.chk-tick{font-size:12px;color:#111;font-weight:800;display:none;}
+.chk.on .chk-tick{display:block;}
+.chk-txt{font-size:14px;color:var(--muted);flex:1;line-height:1.3;}
+.chk.on .chk-txt{color:var(--accent);}
+.chk-sub{font-size:11px;color:var(--dim);display:block;margin-top:2px;}
+.sz-badge{font-size:11px;font-weight:600;padding:2px 9px;border-radius:20px;background:var(--acc2);color:var(--accent);border:1px solid var(--acc3);margin-left:7px;display:none;}
+.hint-box{background:var(--bg2);border-radius:var(--rs);padding:13px 14px;border:1.5px solid var(--bg3);}
+.hint-box .h-lbl{font-size:12px;color:var(--muted);margin-bottom:3px;}
+.hint-box .h-val{font-size:18px;font-weight:600;color:var(--text);}
 
-  .chk-group{display:flex;flex-direction:column;gap:7px;margin-bottom:11px;}
-  .chk{display:flex;align-items:center;gap:12px;background:var(--bg2);border:1px solid var(--border);border-radius:var(--rs);padding:11px 13px;cursor:pointer;}
-  .chk.on{border-color:var(--accent-bd);background:var(--accent-bg);}
-  .chk-box{width:20px;height:20px;border-radius:6px;border:1.5px solid var(--border2);display:flex;align-items:center;justify-content:center;flex-shrink:0;background:var(--bg3);}
-  .chk.on .chk-box{background:var(--accent);border-color:var(--accent);}
-  .chk-tick{font-size:11px;color:#000;font-weight:700;display:none;}
-  .chk.on .chk-tick{display:block;}
-  .chk-txt{font-size:14px;color:var(--muted);flex:1;}
-  .chk.on .chk-txt{color:var(--accent);}
-  .chk-sub{font-size:11px;color:var(--dim);display:block;margin-top:1px;}
-  .sz-badge{display:none;font-size:11px;font-weight:600;padding:2px 9px;border-radius:20px;background:var(--accent-bg);color:var(--accent);border:1px solid var(--accent-bd);margin-left:7px;}
-  .hint{font-size:13px;color:var(--dim);padding:4px 0 6px;line-height:1.5;}
+.res-bar{position:fixed;bottom:0;left:0;right:0;padding:0 16px env(safe-area-inset-bottom,16px);background:var(--bg2);border-top:1px solid rgba(255,255,255,.1);z-index:50;}
+.res-pad{padding:12px 0 4px;}
+.res-empty{text-align:center;padding:15px 0;color:var(--dim);font-size:14px;}
+.res-row{display:flex;align-items:center;justify-content:space-between;gap:12px;}
+.res-prices{}
+.res-sgd{font-size:38px;font-weight:800;letter-spacing:-.02em;color:var(--green);line-height:1;}
+.res-sgd.vvip{color:var(--vvip);}
+.res-idr{font-size:13px;color:var(--muted);margin-top:2px;}
+.bd-btn{background:var(--bg3);border:1.5px solid var(--bg4);color:var(--muted);font-size:13px;padding:9px 15px;border-radius:20px;cursor:pointer;white-space:nowrap;flex-shrink:0;font-weight:500;}
 
-  /* RESULT BAR */
-  .res-bar{position:fixed;bottom:0;left:0;right:0;padding:0 16px env(safe-area-inset-bottom,14px);background:var(--bg2);border-top:1px solid var(--border2);z-index:200;}
-  .res-inner{padding:11px 0 2px;}
-  .res-empty{text-align:center;padding:14px 0;color:var(--dim);font-size:14px;}
-  .res-row{display:flex;align-items:center;justify-content:space-between;gap:10px;}
-  .res-sgd{font-size:34px;font-weight:700;letter-spacing:-.02em;color:var(--green);line-height:1;}
-  .res-idr{font-size:13px;color:var(--muted);margin-top:2px;}
-  .bd-btn{background:var(--bg3);border:1px solid var(--border2);color:var(--muted);font-size:12px;padding:8px 13px;border-radius:20px;cursor:pointer;white-space:nowrap;flex-shrink:0;}
+.overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:200;align-items:flex-end;}
+.overlay.on{display:flex;}
+.sheet{background:var(--bg2);border-radius:22px 22px 0 0;width:100%;padding:0 18px env(safe-area-inset-bottom,20px);border-top:1px solid rgba(255,255,255,.1);animation:up .22s cubic-bezier(.4,0,.2,1);}
+@keyframes up{from{transform:translateY(100%)}to{transform:translateY(0)}}
+.sh-handle{width:36px;height:4px;background:var(--bg4);border-radius:2px;margin:12px auto 16px;}
+.sh-ttl{font-size:12px;font-weight:600;color:var(--muted);letter-spacing:.07em;text-transform:uppercase;margin-bottom:14px;}
+.brow{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid rgba(255,255,255,.06);}
+.brow:last-of-type{border:none;}
+.bl{font-size:14px;color:var(--muted);}
+.bv{font-size:14px;font-weight:600;color:var(--text);}
+.brow.vvip-row-bd .bv{color:var(--vvip);}
+.btotal{background:var(--bg3);border-radius:var(--rs);padding:13px 14px;display:flex;justify-content:space-between;align-items:center;margin-top:6px;border:1px solid rgba(255,255,255,.06);}
+.btotal .bl{font-size:15px;font-weight:700;color:var(--text);}
+.btotal .bv{font-size:18px;color:var(--green);}
+.btotal.vvip .bv{color:var(--vvip);}
+.sh-close{width:100%;margin-top:12px;padding:14px;background:var(--bg3);border:1.5px solid var(--bg4);border-radius:var(--rs);color:var(--text);font-size:16px;font-weight:600;cursor:pointer;}
 
-  /* SHEET */
-  .overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:300;align-items:flex-end;}
-  .overlay.on{display:flex;}
-  .sheet{background:var(--bg2);border-radius:20px 20px 0 0;width:100%;padding:0 18px env(safe-area-inset-bottom,18px);border-top:1px solid var(--border2);animation:up .22s ease;}
-  @keyframes up{from{transform:translateY(100%)}to{transform:translateY(0)}}
-  .sh-handle{width:34px;height:4px;background:var(--border2);border-radius:2px;margin:11px auto 15px;}
-  .sh-title{font-size:12px;font-weight:600;color:var(--muted);letter-spacing:.07em;text-transform:uppercase;margin-bottom:13px;}
-  .bd-row{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--border);}
-  .bd-row:last-of-type{border:none;}
-  .bd-l{font-size:14px;color:var(--muted);}
-  .bd-v{font-size:14px;font-weight:500;color:var(--text);}
-  .bd-total{background:var(--bg3);margin:4px -5px 0;padding:12px 5px;border-radius:var(--rs);display:flex;justify-content:space-between;align-items:center;}
-  .bd-total .bd-l{color:var(--text);font-weight:600;font-size:15px;}
-  .bd-total .bd-v{color:var(--green);font-size:16px;}
-  .sh-close{width:100%;margin-top:13px;padding:13px;background:var(--bg3);border:1px solid var(--border2);border-radius:var(--rs);color:var(--text);font-size:15px;font-weight:500;cursor:pointer;}
+.toast{position:fixed;bottom:150px;left:50%;transform:translateX(-50%);background:var(--bg3);border:1px solid rgba(255,255,255,.12);color:var(--text);font-size:12px;padding:9px 18px;border-radius:20px;z-index:300;white-space:nowrap;pointer-events:none;opacity:0;transition:opacity .25s;}
+.toast.show{opacity:1;}
 </style>
 </head>
 <body>
 
 <div class="hdr">
-  <div class="hdr-row">
-    <div class="logo">Price Calc <em>/ China</em></div>
-    <button class="rbtn" id="editBtn" onclick="toggleEdit()">✎ Kurs</button>
-  </div>
-
-  <div class="kurs-bar">
-    <div class="kurs-chips">
-      <div class="chip loading" id="chipA">
-        <div class="dot"></div><span>CNY→SGD: <b id="vA">–</b></span>
-      </div>
-      <div class="chip loading" id="chipB">
-        <div class="dot"></div><span>SGD→IDR: <b id="vB">–</b></span>
-      </div>
-    </div>
-    <div class="kurs-right">
-      <span class="ts" id="tsLabel">Memuat...</span>
+  <div class="hdr-top">
+    <div class="logo">Price Calc <span>China → SGD</span></div>
+    <div class="refresh-wrap">
+      <span class="ts" id="ts">Memuat kurs...</span>
       <button class="rbtn" id="rfBtn" onclick="fetchRates()">↻</button>
     </div>
   </div>
-
-  <div class="kurs-edit" id="kursEdit">
-    <p class="ke-note">Isi manual jika kurs otomatis tidak tersedia. Kosongkan untuk pakai kurs live.</p>
-    <div class="ke-grid">
-      <div class="ke-field"><label>CNY → SGD</label><input type="number" id="mA" placeholder="contoh: 0.183" step="0.001" inputmode="decimal" oninput="onManual()"></div>
-      <div class="ke-field"><label>SGD → IDR</label><input type="number" id="mB" placeholder="contoh: 13600" step="100" inputmode="decimal" oninput="onManual()"></div>
+  <div class="kurs-bar">
+    <div class="chip loading" id="chipA"><div class="dot"></div><span>CNY→SGD: <b id="vA">–</b></span></div>
+    <div class="chip loading" id="chipB"><div class="dot"></div><span>SGD→IDR: <b id="vB">–</b></span></div>
+  </div>
+  <div class="ovr-bar">
+    <button class="ovr-toggle" onclick="toggleOvr()">✎ Override kurs manual</button>
+    <div class="ovr-panel" id="ovrPanel">
+      <p class="ovr-note">Isi jika ingin override kurs live. Kosongkan untuk kembali pakai kurs otomatis.</p>
+      <div class="ovr-grid">
+        <div class="ovr-field"><label>CNY → SGD</label><input type="number" id="mA" placeholder="contoh: 0.19" step="0.001" inputmode="decimal" oninput="onOvr()"></div>
+        <div class="ovr-field"><label>SGD → IDR</label><input type="number" id="mB" placeholder="contoh: 13600" step="50" inputmode="decimal" oninput="onOvr()"></div>
+      </div>
+      <button class="ovr-reset" onclick="resetOvr()">↺ Pakai kurs live lagi</button>
     </div>
-    <button class="ke-reset" onclick="resetManual()">↺ Pakai kurs live lagi</button>
   </div>
 </div>
 
 <div id="toast" class="toast"></div>
 
 <div class="main">
-  <div class="cat-sec">
-    <div class="sec-label">Kategori</div>
+  <!-- Category -->
+  <div class="sec">
+    <div class="sec-lbl">Kategori Produk</div>
     <div class="cat-grid">
       <div class="cat-btn on" data-c="clothes" onclick="setCat('clothes')"><span class="ic">👕</span><span class="nm">Clothes</span></div>
       <div class="cat-btn" data-c="bag" onclick="setCat('bag')"><span class="ic">👜</span><span class="nm">Bag</span></div>
       <div class="cat-btn" data-c="shoes" onclick="setCat('shoes')"><span class="ic">👟</span><span class="nm">Shoes</span></div>
-      <div class="cat-btn" data-c="accessories" onclick="setCat('accessories')"><span class="ic">💍</span><span class="nm">Accs</span></div>
+      <div class="cat-btn" data-c="accessories" onclick="setCat('accessories')"><span class="ic">💍</span><span class="nm">Accessories</span></div>
+      <div class="cat-btn" data-c="tumblr" onclick="setCat('tumblr')"><span class="ic">🥤</span><span class="nm">Tumblr</span></div>
+      <div class="cat-btn" data-c="wallet" onclick="setCat('wallet')"><span class="ic">👛</span><span class="nm">Wallet</span></div>
+    </div>
+
+    <!-- VVIP Toggle -->
+    <div class="vvip-row" id="vvipRow" onclick="toggleVVIP()">
+      <div class="vvip-left">
+        <span class="vvip-icon">👑</span>
+        <div>
+          <div class="vvip-label">VVIP Customer</div>
+          <span class="vvip-sub">Tambah $8 SGD</span>
+        </div>
+      </div>
+      <div class="toggle-wrap">
+        <input type="checkbox" class="toggle-inp" id="vvipChk" onchange="calc()">
+        <div class="toggle-track"><div class="toggle-knob"></div></div>
+      </div>
     </div>
   </div>
 
-  <div class="price-sec">
-    <div class="p-label">Harga Produk</div>
-    <div class="p-wrap">
+  <!-- Price input -->
+  <div class="sec" style="padding-top:4px;">
+    <div class="p-lbl">Harga Produk (CNY ¥)</div>
+    <div class="p-box">
       <span class="p-cur">¥</span>
       <input class="p-inp" type="number" id="cny" placeholder="0" inputmode="decimal" min="0" step="1" oninput="calc()">
     </div>
+    <div class="p-preview" id="pPrev"></div>
   </div>
 
-  <div class="inp-sec" id="catInp"></div>
+  <!-- Dynamic category inputs -->
+  <div class="inp-area" id="catInp"></div>
 </div>
 
+<!-- Result bar -->
 <div class="res-bar">
-  <div class="res-inner" id="resBar">
+  <div class="res-pad" id="resBar">
     <div class="res-empty">Masukkan harga untuk melihat hasil</div>
   </div>
 </div>
 
+<!-- Breakdown sheet -->
 <div class="overlay" id="overlay" onclick="closeSheet(event)">
   <div class="sheet">
     <div class="sh-handle"></div>
-    <div class="sh-title">Rincian Biaya</div>
+    <div class="sh-ttl">Rincian Biaya</div>
     <div id="shBody"></div>
     <button class="sh-close" onclick="closeSheet()">Tutup</button>
   </div>
 </div>
 
 <script>
-/* ── Config ── */
-const GST={clothes:0.76,bag:1.15,shoes:1.35,accessories:1.15};
-const DAILY=5.65,PROFIT=10;
-// Fallback rates (used if all APIs fail and no cache/manual)
-const FB_CNY=0.183, FB_IDR=13600;
+/* ─── Constants ─── */
+const DAILY = 6;
+const ACCT  = 1.50;
+const PROFIT = 10;
+const VVIP_ADD = 8;
+const FB_CNY = 0.19, FB_IDR = 13600;
 
-/* ── State ── */
-let cat='clothes', lastRes=null;
-let liveCNY=null, liveIDR=null;
-let manCNY=null, manIDR=null;
-const chk={bulky:false,foldable:false,withbox:false};
+const GST = {
+  clothes:     1.00,
+  bag:         1.50,
+  shoes:       1.50,
+  accessories: 1.50,
+  tumblr:      1.50,
+  wallet:      1.50
+};
 
-/* ── Rates ── */
-function getRate(){
-  const c=manCNY||liveCNY||FB_CNY;
-  const i=manIDR||liveIDR||FB_IDR;
-  const isManual=!!(manCNY||manIDR);
-  const isLive=!!(liveCNY&&liveIDR)&&!isManual;
-  return{c,i,isManual,isLive};
+/* ─── State ─── */
+let cat = 'clothes', lastRes = null;
+let liveCNY = null, liveIDR = null;
+let manCNY = null, manIDR = null;
+const chk = { bulky: false, foldable: false, withbox: false };
+
+/* ─── Toast ─── */
+let tTimer;
+function toast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg; el.classList.add('show');
+  clearTimeout(tTimer);
+  tTimer = setTimeout(() => el.classList.remove('show'), 3500);
 }
 
-// Three different API sources tried in order
-const APIS=[
-  // 1. Frankfurter (EU ECB data, good CORS)
-  async()=>{
-    const r=await fetch('https://api.frankfurter.app/latest?from=CNY&to=SGD,IDR',{signal:AbortSignal.timeout(6000)});
-    const d=await r.json();
-    return{cny:d.rates.SGD, idr:d.rates.IDR/d.rates.SGD};
+/* ─── Exchange Rates ─── */
+const APIS = [
+  async () => {
+    const r = await fetch('https://api.frankfurter.app/latest?from=CNY&to=SGD,IDR', { signal: AbortSignal.timeout(7000) });
+    const d = await r.json(); if (!d.rates) throw new Error();
+    return { cny: d.rates.SGD, idr: d.rates.IDR / d.rates.SGD };
   },
-  // 2. ExchangeRate-API free tier
-  async()=>{
-    const r=await fetch('https://open.er-api.com/v6/latest/CNY',{signal:AbortSignal.timeout(6000)});
-    const d=await r.json();
-    if(d.result!=='success')throw new Error('bad');
-    return{cny:d.rates.SGD, idr:d.rates.IDR/d.rates.SGD};
+  async () => {
+    const r = await fetch('https://open.er-api.com/v6/latest/CNY', { signal: AbortSignal.timeout(7000) });
+    const d = await r.json(); if (d.result !== 'success') throw new Error();
+    return { cny: d.rates.SGD, idr: d.rates.IDR / d.rates.SGD };
   },
-  // 3. fawazahmed0 via jsDelivr CDN (most reliable for file:// origins)
-  async()=>{
-    const r=await fetch('https://cdn.jsdelivr.net/npm/@fawazahmed0/currency-api@latest/v1/currencies/cny.min.json',{signal:AbortSignal.timeout(8000)});
-    const d=await r.json();
-    return{cny:d.cny.sgd, idr:d.cny.idr/d.cny.sgd};
+  async () => {
+    const r = await fetch('https://cdn.jsdelivr.net/npm/@fawazahmed0/currency-api@latest/v1/currencies/cny.min.json', { signal: AbortSignal.timeout(9000) });
+    const d = await r.json();
+    return { cny: d.cny.sgd, idr: d.cny.idr / d.cny.sgd };
   }
 ];
 
-async function fetchRates(){
-  const rb=document.getElementById('rfBtn');
+async function fetchRates() {
+  const rb = document.getElementById('rfBtn');
   rb.classList.add('spin');
-  setChip('loading','loading');
-  setTs('Memuat...');
-
-  let success=false;
-  for(let i=0;i<APIS.length;i++){
-    try{
-      const d=await APIS[i]();
-      liveCNY=parseFloat(d.cny.toFixed(5));
-      liveIDR=Math.round(d.idr);
-      updateChipValues();
-      setChip('live','live');
-      const now=new Date();
-      const t=pad(now.getHours())+':'+pad(now.getMinutes());
-      setTs('Live '+t);
-      // Cache
-      try{localStorage.setItem('kc',liveCNY);localStorage.setItem('ki',liveIDR);localStorage.setItem('kt',now.toISOString());}catch(e){}
-      success=true;
-      break;
-    }catch(e){ /* try next */ }
+  setChip('loading'); setTs('Memuat...');
+  let ok = false;
+  for (let i = 0; i < APIS.length; i++) {
+    try {
+      const d = await APIS[i]();
+      liveCNY = parseFloat(d.cny.toFixed(5));
+      liveIDR = Math.round(d.idr);
+      applyLive();
+      try { localStorage.setItem('rc', liveCNY); localStorage.setItem('ri', liveIDR); localStorage.setItem('rt', Date.now()); } catch (e) {}
+      ok = true; break;
+    } catch (e) {}
   }
-
-  if(!success){
-    // Try cache
-    try{
-      const c=localStorage.getItem('kc'),i=localStorage.getItem('ki'),t=localStorage.getItem('kt');
-      if(c&&i){
-        liveCNY=parseFloat(c); liveIDR=parseInt(i);
-        updateChipValues();
-        setChip('live','live');
-        if(t){const d=new Date(t);setTs('Cache '+pad(d.getHours())+':'+pad(d.getMinutes()));}
-        success=true;
-        toast('Pakai kurs cache tersimpan');
+  if (!ok) {
+    try {
+      const c = localStorage.getItem('rc'), i = localStorage.getItem('ri'), t = localStorage.getItem('rt');
+      if (c && i) {
+        liveCNY = parseFloat(c); liveIDR = parseInt(i);
+        applyLive();
+        const age = t ? Math.round((Date.now() - parseInt(t)) / 60000) : null;
+        setTs(age ? `Cache ${age}m lalu` : 'Cache tersimpan');
+        toast('Kurs dari cache — tekan ↻ untuk update');
+        ok = true;
       }
-    }catch(e){}
-
-    if(!success){
-      setChip('err','err');
-      setTs('Gagal');
-      // Use fallback defaults so app still works
-      liveCNY=FB_CNY; liveIDR=FB_IDR;
-      updateChipValues();
-      toast('Kurs tidak bisa diambil — pakai kurs default. Isi manual jika perlu.');
-    }
+    } catch (e) {}
   }
-
+  if (!ok) {
+    liveCNY = FB_CNY; liveIDR = FB_IDR;
+    applyLive(); setChip('err');
+    setTs('Gagal — default dipakai');
+    toast('Kurs gagal dimuat. Override manual jika perlu.');
+  }
   rb.classList.remove('spin');
   calc();
 }
 
-function updateChipValues(){
-  const r=getRate();
-  document.getElementById('vA').textContent=r.c.toFixed(4);
-  document.getElementById('vB').textContent=r.i.toLocaleString('id-ID');
+function applyLive() {
+  const r = getRate();
+  document.getElementById('vA').textContent = r.c.toFixed(4);
+  document.getElementById('vB').textContent = r.i.toLocaleString('id-ID');
+  if (!manCNY && !manIDR) {
+    setChip('live');
+    const now = new Date();
+    setTs('Live ' + pad(now.getHours()) + ':' + pad(now.getMinutes()));
+  }
 }
+function setChip(s) { document.getElementById('chipA').className = 'chip ' + s; document.getElementById('chipB').className = 'chip ' + s; }
+function setTs(s) { document.getElementById('ts').textContent = s; }
+function pad(n) { return n.toString().padStart(2, '0'); }
+function getRate() { return { c: manCNY || liveCNY || FB_CNY, i: manIDR || liveIDR || FB_IDR }; }
 
-function setChip(a,b){
-  document.getElementById('chipA').className='chip '+a;
-  document.getElementById('chipB').className='chip '+b;
-}
-function setTs(s){document.getElementById('tsLabel').textContent=s;}
-function pad(n){return n.toString().padStart(2,'0');}
-
-function onManual(){
-  manCNY=parseFloat(document.getElementById('mA').value)||null;
-  manIDR=parseFloat(document.getElementById('mB').value)||null;
-  if(manCNY||manIDR){setChip('manual','manual');setTs('Manual');}
-  else{if(liveCNY)setChip('live','live');else setChip('err','err');}
-  updateChipValues();
+function toggleOvr() { document.getElementById('ovrPanel').classList.toggle('on'); }
+function onOvr() {
+  manCNY = parseFloat(document.getElementById('mA').value) || null;
+  manIDR = parseFloat(document.getElementById('mB').value) || null;
+  const r = getRate();
+  document.getElementById('vA').textContent = r.c.toFixed(4);
+  document.getElementById('vB').textContent = r.i.toLocaleString('id-ID');
+  setTs(manCNY || manIDR ? 'Override manual' : 'Live');
   calc();
 }
+function resetOvr() {
+  manCNY = null; manIDR = null;
+  document.getElementById('mA').value = '';
+  document.getElementById('mB').value = '';
+  applyLive(); calc();
+}
 
-function resetManual(){
-  manCNY=null;manIDR=null;
-  document.getElementById('mA').value='';
-  document.getElementById('mB').value='';
-  if(liveCNY){setChip('live','live');setTs('Live');}
-  updateChipValues();
+/* ─── VVIP ─── */
+function toggleVVIP() {
+  const chkEl = document.getElementById('vvipChk');
+  chkEl.checked = !chkEl.checked;
+  document.getElementById('vvipRow').classList.toggle('on', chkEl.checked);
   calc();
 }
+function isVVIP() { return document.getElementById('vvipChk').checked; }
 
-function toggleEdit(){
-  const p=document.getElementById('kursEdit');
-  p.classList.toggle('on');
-}
-
-/* ── Toast ── */
-let toastTmr;
-function toast(msg){
-  const el=document.getElementById('toast');
-  el.textContent=msg; el.classList.add('show');
-  clearTimeout(toastTmr);
-  toastTmr=setTimeout(()=>el.classList.remove('show'),3500);
-}
-
-/* ── Category HTML ── */
-const CAT={
-  clothes:`<div class="field"><label>Berat produk</label><div class="row2"><input type="number" id="wt" placeholder="Contoh: 350" inputmode="decimal" min="0" step="1" oninput="calc()"><select id="wu" onchange="calc()"><option value="g">gram</option><option value="kg">kg</option></select></div></div>`,
-  bag:`<div class="field"><label>Panjang tas (cm) <span class="sz-badge" id="szB"></span></label><input type="number" id="bl" placeholder="Contoh: 30" inputmode="decimal" min="0" step="0.5" oninput="calc()"></div><div class="chk-group"><div class="chk" id="ck-bulky" onclick="tChk('bulky')"><div class="chk-box"><span class="chk-tick">✓</span></div><div class="chk-txt">Bulky / tebal<span class="chk-sub">Naik 1 ukuran atau +$1.50</span></div></div><div class="chk" id="ck-foldable" onclick="tChk('foldable')"><div class="chk-box"><span class="chk-tick">✓</span></div><div class="chk-txt">Foldable / tipis<span class="chk-sub">Turun 1 ukuran (contoh: Longchamp)</span></div></div><div class="chk" id="ck-withbox" onclick="tChk('withbox')"><div class="chk-box"><span class="chk-tick">✓</span></div><div class="chk-txt">Dengan box<span class="chk-sub">Naik 1 ukuran atau +$2.00</span></div></div></div>`,
-  shoes:`<p class="hint">Sepatu tarif tetap: <strong>$3.80 SGD</strong> — tidak perlu input tambahan.</p>`,
-  accessories:`<div class="field"><label>Tipe box</label><select id="ab" onchange="calc()"><option value="small">📦 Small / medium box — $1.15</option><option value="big">📦 Big box — $2.00</option><option value="fullset">🎁 Full set (box+buku+sertifikat+paperbag) — $2.65</option></select></div>`
+/* ─── Category HTML ─── */
+const CAT = {
+  clothes: `
+    <div class="field"><label>Berat produk</label>
+    <div class="row2">
+      <input type="number" id="wt" placeholder="Contoh: 350" inputmode="decimal" min="0" step="1" oninput="calc()">
+      <select id="wu" onchange="calc()"><option value="g">gram</option><option value="kg">kg</option></select>
+    </div></div>`,
+  bag: `
+    <div class="field">
+      <label>Panjang tas (cm) <span class="sz-badge" id="szB"></span></label>
+      <input type="number" id="bl" placeholder="Contoh: 30" inputmode="decimal" min="0" step="0.5" oninput="calc()">
+    </div>
+    <div class="chk-group">
+      <div class="chk" id="ck-bulky" onclick="tChk('bulky')"><div class="chk-box"><span class="chk-tick">✓</span></div><div class="chk-txt">Bulky / tebal<span class="chk-sub">Naik 1 ukuran atau +$2.00</span></div></div>
+      <div class="chk" id="ck-foldable" onclick="tChk('foldable')"><div class="chk-box"><span class="chk-tick">✓</span></div><div class="chk-txt">Foldable / tipis<span class="chk-sub">Turun 1 ukuran (contoh: Longchamp)</span></div></div>
+      <div class="chk" id="ck-withbox" onclick="tChk('withbox')"><div class="chk-box"><span class="chk-tick">✓</span></div><div class="chk-txt">Dengan box<span class="chk-sub">Naik 1 ukuran atau +$2.00</span></div></div>
+    </div>`,
+  shoes: `<div class="hint-box"><div class="h-lbl">Biaya shipping sepatu (tarif tetap)</div><div class="h-val">$5.00 SGD</div></div>`,
+  accessories: `
+    <div class="field"><label>Tipe box</label>
+    <select id="ab" onchange="calc()">
+      <option value="small">📦 Small / medium box — $1.30</option>
+      <option value="big">📦 Big box — $2.00</option>
+      <option value="fullset">🎁 Full set (box+buku+sertifikat+paperbag) — $3.50</option>
+    </select></div>`,
+  tumblr: `<div class="hint-box"><div class="h-lbl">Biaya shipping tumblr (tarif tetap)</div><div class="h-val">$3.50 SGD</div></div>`,
+  wallet: `<div class="hint-box"><div class="h-lbl">Biaya shipping wallet (tarif tetap)</div><div class="h-val">$2.00 SGD</div></div>`
 };
 
-function tChk(k){chk[k]=!chk[k];document.getElementById('ck-'+k)?.classList.toggle('on',chk[k]);calc();}
-function resetChk(){Object.keys(chk).forEach(k=>chk[k]=false);}
+function tChk(k) { chk[k] = !chk[k]; document.getElementById('ck-' + k)?.classList.toggle('on', chk[k]); calc(); }
+function resetChk() { Object.keys(chk).forEach(k => chk[k] = false); }
 
-function setCat(c){
-  cat=c;resetChk();
-  document.querySelectorAll('.cat-btn').forEach(b=>b.classList.toggle('on',b.dataset.c===c));
-  document.getElementById('catInp').innerHTML=CAT[c]||'';
+function setCat(c) {
+  cat = c; resetChk();
+  document.querySelectorAll('.cat-btn').forEach(b => b.classList.toggle('on', b.dataset.c === c));
+  document.getElementById('catInp').innerHTML = CAT[c] || '';
   calc();
 }
 
-/* ── Shipping ── */
-function ship(){
-  if(cat==='clothes'){
-    const w=parseFloat(document.getElementById('wt')?.value)||0;
-    const u=document.getElementById('wu')?.value||'g';
-    const g=u==='kg'?w*1000:w;
-    if(!g)return null;
-    if(g<=500)return{cost:1.15,lb:'100–500g'};
-    if(g<=1000)return{cost:2.30,lb:'500g–1kg'};
-    if(g<=1900)return{cost:3.50,lb:'1kg–1.9kg'};
-    return{cost:4.50,lb:'2kg–2.5kg'};
+/* ─── Shipping ─── */
+function getShip() {
+  if (cat === 'clothes') {
+    const w = parseFloat(document.getElementById('wt')?.value) || 0;
+    const u = document.getElementById('wu')?.value || 'g';
+    const g = u === 'kg' ? w * 1000 : w; if (!g) return null;
+    if (g <= 500)  return { cost: 1.50, lb: '100–500g' };
+    if (g <= 1000) return { cost: 3.00, lb: '500g–1kg' };
+    if (g <= 1900) return { cost: 4.00, lb: '1kg–1.9kg' };
+    return { cost: 4.50, lb: '2kg–2.5kg' };
   }
-  if(cat==='bag'){
-    const len=parseFloat(document.getElementById('bl')?.value)||0;
-    if(!len)return null;
-    const P=[1.50,3.05,4.55],N=['Small','Medium','Large'];
-    let si=len<=25?0:len<=38?1:2,ex=0;
-    if(chk.foldable)si=Math.max(0,si-1);
-    if(chk.bulky){si<2?si++:ex+=1.50;}
-    if(chk.withbox){si<2?si++:ex+=2.00;}
-    si=Math.min(2,si);
-    const b=document.getElementById('szB');
-    if(b){b.textContent=N[si];b.style.display='inline-block';}
-    return{cost:P[si]+ex,lb:N[si]+(ex?'+ex':'')};
+  if (cat === 'bag') {
+    const len = parseFloat(document.getElementById('bl')?.value) || 0; if (!len) return null;
+    const P = [2.00, 3.50, 5.50], N = ['Small', 'Medium', 'Large'];
+    let si = len <= 25 ? 0 : len <= 38 ? 1 : 2, ex = 0;
+    if (chk.foldable) si = Math.max(0, si - 1);
+    if (chk.bulky)   { if (si < 2) si++; else ex += 2.00; }
+    if (chk.withbox) { if (si < 2) si++; else ex += 2.00; }
+    si = Math.min(2, si);
+    const b = document.getElementById('szB');
+    if (b) { b.textContent = N[si]; b.style.display = 'inline'; }
+    return { cost: P[si] + ex, lb: N[si] + (ex ? ' +ex' : '') };
   }
-  if(cat==='shoes')return{cost:3.80,lb:'Fixed'};
-  if(cat==='accessories'){
-    const v=document.getElementById('ab')?.value||'small';
-    return{small:{cost:1.15,lb:'Small/Med'},big:{cost:2.00,lb:'Big box'},fullset:{cost:2.65,lb:'Full set'}}[v];
+  if (cat === 'shoes')  return { cost: 5.00, lb: 'Fixed' };
+  if (cat === 'tumblr') return { cost: 3.50, lb: 'Fixed' };
+  if (cat === 'wallet') return { cost: 2.00, lb: 'Fixed' };
+  if (cat === 'accessories') {
+    const v = document.getElementById('ab')?.value || 'small';
+    return { small: { cost: 1.30, lb: 'Small/Med box' }, big: { cost: 2.00, lb: 'Big box' }, fullset: { cost: 3.50, lb: 'Full set' } }[v];
   }
   return null;
 }
 
-/* ── Calc ── */
-function f(n){return n.toFixed(2);}
-function idrF(n){return'Rp '+(Math.round(n/500)*500).toLocaleString('id-ID');}
+/* ─── Calc ─── */
+const f = n => n.toFixed(2);
+const idrF = n => 'Rp ' + (Math.round(n / 500) * 500).toLocaleString('id-ID');
 
-function calc(){
-  const cnyVal=parseFloat(document.getElementById('cny')?.value)||0;
-  const {c:rSGD,i:rIDR,isManual}=getRate();
-  const bar=document.getElementById('resBar');
-  if(!cnyVal){lastRes=null;bar.innerHTML='<div class="res-empty">Masukkan harga untuk melihat hasil</div>';return;}
-  const s=ship();
-  if(!s){lastRes=null;bar.innerHTML='<div class="res-empty">Lengkapi data berat / ukuran</div>';return;}
-  const prod=cnyVal*rSGD,bank=prod*0.03,gst=GST[cat];
-  const total=prod+bank+DAILY+s.cost+gst+PROFIT;
-  const rounded=Math.round(total),totalIDR=rounded*rIDR;
-  lastRes={cnyVal,prod,bank,s,gst,total,rounded,totalIDR,rIDR,rSGD,isManual};
-  bar.innerHTML=`<div class="res-row"><div><div class="res-sgd">SGD ${rounded}</div><div class="res-idr">${idrF(totalIDR)}</div></div><button class="bd-btn" onclick="showSheet()">Rincian ▾</button></div>`;
+function calc() {
+  const cv = parseFloat(document.getElementById('cny')?.value) || 0;
+  const { c: rSGD, i: rIDR } = getRate();
+  const bar = document.getElementById('resBar');
+  const prev = document.getElementById('pPrev');
+  if (cv > 0) prev.textContent = '≈ SGD ' + (cv * rSGD).toFixed(2) + ' · ' + idrF(cv * rSGD * rIDR) + ' (harga produk saja)';
+  else prev.textContent = '';
+  if (!cv) { lastRes = null; bar.innerHTML = '<div class="res-empty">Masukkan harga untuk melihat hasil</div>'; return; }
+  const s = getShip();
+  if (!s) { lastRes = null; bar.innerHTML = '<div class="res-empty">Lengkapi data di atas</div>'; return; }
+
+  const prod  = cv * rSGD;
+  const bank  = prod * 0.03;
+  const gst   = GST[cat];
+  const vvip  = isVVIP() ? VVIP_ADD : 0;
+  const total = prod + bank + DAILY + s.cost + gst + ACCT + PROFIT + vvip;
+  const rounded = Math.round(total);
+  const totalIDR = rounded * rIDR;
+
+  lastRes = { cv, prod, bank, s, gst, total, rounded, totalIDR, rIDR, rSGD, vvip };
+
+  bar.innerHTML = `
+    <div class="res-row">
+      <div class="res-prices">
+        <div class="res-sgd${vvip ? ' vvip' : ''}">SGD&nbsp;${rounded}${vvip ? ' 👑' : ''}</div>
+        <div class="res-idr">${idrF(totalIDR)}</div>
+      </div>
+      <button class="bd-btn" onclick="showSheet()">Rincian ▾</button>
+    </div>`;
 }
 
-/* ── Sheet ── */
-function showSheet(){
-  if(!lastRes)return;
-  const r=lastRes;
-  const kLabel=r.isManual?'(manual)':'(live)';
-  document.getElementById('shBody').innerHTML=`
-    <div class="bd-row"><span class="bd-l">Kurs CNY→SGD</span><span class="bd-v">${r.rSGD.toFixed(4)} ${kLabel}</span></div>
-    <div class="bd-row"><span class="bd-l">Harga produk (¥${r.cnyVal})</span><span class="bd-v">$${f(r.prod)}</span></div>
-    <div class="bd-row"><span class="bd-l">Bank fee 3%</span><span class="bd-v">$${f(r.bank)}</span></div>
-    <div class="bd-row"><span class="bd-l">Daily expenses</span><span class="bd-v">$${f(DAILY)}</span></div>
-    <div class="bd-row"><span class="bd-l">Shipping (${r.s.lb})</span><span class="bd-v">$${f(r.s.cost)}</span></div>
-    <div class="bd-row"><span class="bd-l">GST</span><span class="bd-v">$${f(r.gst)}</span></div>
-    <div class="bd-row"><span class="bd-l">Nett profit</span><span class="bd-v">$${f(PROFIT)}</span></div>
-    <div class="bd-total"><span class="bd-l">Total Jual</span><span class="bd-v">SGD ${r.rounded} · ${idrF(r.totalIDR)}</span></div>`;
+/* ─── Sheet ─── */
+function showSheet() {
+  if (!lastRes) return;
+  const r = lastRes;
+  const vvipRow = r.vvip ? `<div class="brow vvip-row-bd"><span class="bl">👑 VVIP</span><span class="bv">+$${f(r.vvip)}</span></div>` : '';
+  document.getElementById('shBody').innerHTML = `
+    <div class="brow"><span class="bl">Kurs CNY→SGD</span><span class="bv">${r.rSGD.toFixed(4)}</span></div>
+    <div class="brow"><span class="bl">Harga produk (¥${r.cv})</span><span class="bv">$${f(r.prod)}</span></div>
+    <div class="brow"><span class="bl">Bank fee (3%)</span><span class="bv">$${f(r.bank)}</span></div>
+    <div class="brow"><span class="bl">Daily expenses</span><span class="bv">$${f(DAILY)}</span></div>
+    <div class="brow"><span class="bl">Shipping (${r.s.lb})</span><span class="bv">$${f(r.s.cost)}</span></div>
+    <div class="brow"><span class="bl">GST</span><span class="bv">$${f(r.gst)}</span></div>
+    <div class="brow"><span class="bl">Accounting expenses</span><span class="bv">$${f(ACCT)}</span></div>
+    <div class="brow"><span class="bl">Nett profit</span><span class="bv">$${f(PROFIT)}</span></div>
+    ${vvipRow}
+    <div class="btotal${r.vvip ? ' vvip' : ''}"><span class="bl">Total Jual</span><span class="bv">SGD ${r.rounded} · ${idrF(r.totalIDR)}</span></div>`;
   document.getElementById('overlay').classList.add('on');
 }
 
-function closeSheet(e){
-  if(!e||e.target===document.getElementById('overlay')||!e)
+function closeSheet(e) {
+  if (!e || e.target === document.getElementById('overlay') || !e.target)
     document.getElementById('overlay').classList.remove('on');
 }
 
-/* ── Init ── */
+/* ─── Init ─── */
 setCat('clothes');
 fetchRates();
 </script>
